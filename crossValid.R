@@ -1,0 +1,109 @@
+#!/usr/local/bin/Rscript
+
+library(gbm)			# Load the gbm package
+library(Metrics)		# Load Metrics for mae method
+library(R.utils)		# for countLines
+
+library(ggplot2)		
+library(scales)
+
+trainDataFileName = "train.csv"
+testDataFileName = "test.csv"
+
+# Load training set
+DataTrain = read.csv(trainDataFileName, header = T, sep = ",", dec = ".", )
+# Load testing set
+DataTest = read.table(testDataFileName, header = T, sep = ",", dec = ".")	
+#summary(DataTest)
+
+
+#number of iterations
+k = 2
+
+#For error rate testing part on training set
+cnt <- countLines(trainDataFileName)
+trainCnt = round(cnt*0.7)
+testCnt = cnt - trainCnt
+
+#trainCnt #Debug
+#testCnt # Debug
+testHeader = colnames(DataTest)
+trainHeader = colnames(DataTrain)
+#testHeader # Debug
+#trainHeader# Debug
+DataTrainLocal = read.csv(trainDataFileName, header = T, nrows = trainCnt, sep = ",", dec = ".", )
+#DataTrainLocal #Debug
+
+# another way to store only testHeader columns 
+DataTestLocal = read.csv(trainDataFileName, header = F, skip = trainCnt, sep = ",", dec = "." , col.names = trainHeader)
+testTarget = DataTestLocal[, "target"]
+DataTestLocal = DataTestLocal[, testHeader]
+#DataTestLocal #Debug
+#testTarget #Debug
+#names(DataTestLocal)#Debug
+#DataTestLocal #Debug
+
+DataTrainLocal$time <- strftime(DataTrainLocal$datetime, format="%H:%M:%S")
+DataTrainLocal$time <- as.POSIXct(DataTrainLocal$time, format="%H:%M:%S")
+DataTrainLocal$time <- as.numeric(DataTrainLocal$time)
+#DataTrainLocal$time 
+#DataTrainLocal$datetime <-NULL
+#DataTrainLocal$datetime #Debug
+
+# Date column
+DataTrainLocal$date <- strftime(DataTrainLocal$datetime, format="%d")
+DataTrainLocal$date <- as.POSIXct(DataTrainLocal$date, format="%d")
+DataTrainLocal$date <- as.numeric(DataTrainLocal$date)
+
+a = "------------------"
+a
+DataTrainLocal$date 
+a = "------------------"
+a 
+DataTrainLocal$datetime <-NULL
+#DataTrainLocal$datetime #Debug
+
+# Train the model
+#gbm1 <- gbm(target ~ . ,distribution="laplace", data=DataTrainLocal, n.trees=3000, interaction.depth =6, shrinkage=0.05)	
+#gbm2 <- gbm(target ~ date ,distribution="laplace", data=DataTrainLocal, n.trees=3000, interaction.depth =6, shrinkage=0.05)	
+#gbm3 <- gbm(target ~ temp + u + v + prmsl +rh,distribution="laplace", data=DataTrainLocal, n.trees=3000, interaction.depth =6, shrinkage=0.05)	
+##
+### Predict the test set
+DataTestLocal$time <- strftime(DataTestLocal$datetime, format="%H:%M:%S")
+DataTestLocal$time <- as.POSIXct(DataTestLocal$time, format="%H:%M:%S")
+DataTestLocal$time <- as.numeric(DataTestLocal$time)
+#DataTestLocal
+DataTestLocal$date <- strftime(DataTestLocal$datetime, format="%d")
+DataTestLocal$date <- as.POSIXct(DataTestLocal$date, format="%d")
+DataTestLocal$date <- as.numeric(DataTestLocal$date)
+
+
+DataTestLocal$datetime <-NULL
+
+#Prediction<- predict.gbm(gbm1, DataTestLocal, n.trees=3000)
+#Prediction2 <- predict.gbm(gbm2, DataTestLocal, n.trees=3000)
+#Prediction3 <- predict.gbm(gbm3, DataTestLocal, n.trees=3000)
+#Prediction <- cbind(Prediction1, Prediction3)
+#Prediction <- cbind(Prediction, Prediction3)
+Prediction
+
+
+
+mymae <- function(par) {
+gbm1 <- gbm(target ~ . ,distribution="laplace", data=DataTrainLocal, n.trees=3000, interaction.depth =6, shrinkage=0.05)	
+Prediction <- predict.gbm(gbm1, DataTestLocal, n.trees=3000)
+Prediction
+err <- mae(testTarget, Prediction)
+}
+
+result <- optim(par = c(0, 1), min.RSS, data = dat)
+
+##
+#pred=rowMeans(Prediction)
+#pred <- round(pred, digits = 2)
+pred <- round(Prediction, digits = 2)
+write.table(Prediction, file = "submission.csv", sep = ",", qmethod = "double", row.names=FALSE)
+#
+
+#err <- mae(testTarget, Prediction)
+#err

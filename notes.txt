@@ -1,0 +1,6 @@
+1. Reading/Writing the data
+2. Plotting the data 
+3. First prediction with gbm(target~ time (in a numeric form)): error rate 0.2662893 on 30% of test data
+4. Second submission: have removed datetime from the data, and train target using all features, including time as a numeric gbm(target ~ .)
+5. ...
+6. New date feature added which is a number of a days ( target ~ .): rate is 0.2322642
